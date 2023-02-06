@@ -103,9 +103,7 @@ class Control2(ControlBase):
 
         glfw.poll_events()
 
-        print('start save depth')
         self.save_depth_to_xyz(meta, meta['save_path'] + meta['save_name_func'](meta['model'].angle) + '.xyz')
-        print('finish save depth')
         meta['model'].angle = self.set_angle_degree(meta['model'].angle, self.d_angle)
         print(meta['model'].angle)
 
