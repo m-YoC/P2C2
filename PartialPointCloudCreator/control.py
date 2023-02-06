@@ -172,7 +172,7 @@ def create_meta_data(load_name, **kwargs):
                  'save_path': './result/', # 保存ディレクトリ
                  'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # 保存ファイル名. 引数に角度(deg)が入る
                  'save_snapshot': False, # スナップショットを保存するか
-                 'save_stl_mode': True, # stl形式で保存するか
+                 'save_stl_mode': False, # stl形式で保存するか
                  'width': 640, # ウィンドウの横幅. この大きさが最終的な点群の密度にも影響する
                  'height': 480, # ウィンドウの縦幅. この大きさが最終的な点群の密度にも影響する
                  'projection': glb.Perspective(60, 0, 0.1, 100), # projection matrix

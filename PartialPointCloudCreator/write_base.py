@@ -7,6 +7,8 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
+_is_good_triangle_thr = 1.15
+
 # ----------------------------------------------------------------------
 
 
@@ -57,7 +59,21 @@ def write_xyz_file(xyz_data, path):
 # (ix + 1, iy), (ix, iy + 1), (ix + 1, iy + 1)をチェックするので
 # ix == width-1 or iy == height-1となるような値は使わないこと
 def add_vertex_and_face(ix, iy, points, is_existence, indices, out_vertices, out_faces):
-    def check_use_index(c0, c1, c2, c3):
+    def dist(ax, ay, bx, by):
+        return math.sqrt(math.fsum( [(points[ax, ay, i] - points[bx, by, i]) ** 2.0 for i in range(0, 3)] ))
+
+    def is_good_triangle(iix, iiy, ijx, ijy, x=ix, y=iy):
+        if not is_existence[iix, iiy] or not is_existence[ijx, ijy] or not is_existence[x, y]: return False
+
+        ab = dist(x, y, iix, iiy)
+        ac = dist(x, y, ijx, ijy)
+        bc = dist(iix, iiy, ijx, ijy)
+        max_d = max(ab, ac, bc)
+        min_d = min(ab, ac, bc)
+        sum_d = math.fsum([ab, ac, bc])
+        return (sum_d - max_d) / max_d > _is_good_triangle_thr # and max_d / min_d < 3.0
+
+    def append_point_indices_and_vertices(c0, c1, c2, c3):
         if c0 and indices[ix, iy] == -1:
             indices[ix, iy] = len(out_vertices)
             out_vertices.append([points[ix, iy, 0], points[ix, iy, 1], points[ix, iy, 2]])
@@ -71,33 +87,45 @@ def add_vertex_and_face(ix, iy, points, is_existence, indices, out_vertices, out
             indices[ix + 1, iy + 1] = len(out_vertices)
             out_vertices.append([points[ix+1, iy+1, 0], points[ix+1, iy+1, 1], points[ix+1, iy+1, 2]])
 
-    def get_indices(ix, iy):
+    def get_indices():
         return indices[ix, iy], indices[ix + 1, iy], indices[ix, iy + 1], indices[ix + 1, iy + 1]
 
-    if is_existence[ix + 1, iy] and is_existence[ix, iy + 1] and is_existence[ix + 1, iy + 1]:
-        # 本当は三角形の貼り方が2種類あるので分けた方がいい
-        check_use_index(True, True, True, True)
-        iv0, iv1, iv2, iv3 = get_indices(ix, iy)
+    if is_good_triangle(ix + 1, iy, ix + 1, iy + 1) and is_good_triangle(ix, iy + 1, ix + 1, iy + 1):
+        append_point_indices_and_vertices(True, True, True, True)
+        iv0, iv1, iv2, iv3 = get_indices()
         out_faces.append([iv0, iv1, iv3])
         out_faces.append([iv0, iv3, iv2])
         return
 
-    if is_existence[ix + 1, iy] and is_existence[ix, iy + 1] and not is_existence[ix + 1, iy + 1]:
-        check_use_index(True, True, True, False)
-        iv0, iv1, iv2, iv3 = get_indices(ix, iy)
+    if is_good_triangle(ix + 1, iy, ix, iy + 1) and is_good_triangle(ix + 1, iy, ix, iy + 1, ix + 1, iy + 1):
+        append_point_indices_and_vertices(True, True, True, True)
+        iv0, iv1, iv2, iv3 = get_indices()
+        out_faces.append([iv0, iv1, iv2])
+        out_faces.append([iv1, iv3, iv2])
+        return
+
+    if is_good_triangle(ix + 1, iy, ix, iy + 1):
+        append_point_indices_and_vertices(True, True, True, False)
+        iv0, iv1, iv2, iv3 = get_indices()
         out_faces.append([iv0, iv1, iv2])
         return
 
-    if is_existence[ix + 1, iy] and not is_existence[ix, iy + 1] and is_existence[ix + 1, iy + 1]:
-        check_use_index(True, True, False, True)
-        iv0, iv1, iv2, iv3 = get_indices(ix, iy)
+    if is_good_triangle(ix + 1, iy, ix + 1, iy + 1):
+        append_point_indices_and_vertices(True, True, False, True)
+        iv0, iv1, iv2, iv3 = get_indices()
         out_faces.append([iv0, iv1, iv3])
         return
 
-    if not is_existence[ix + 1, iy] and is_existence[ix, iy + 1] and is_existence[ix + 1, iy + 1]:
-        check_use_index(True, False, True, True)
-        iv0, iv1, iv2, iv3 = get_indices(ix, iy)
+    if is_good_triangle(ix, iy + 1, ix + 1, iy + 1):
+        append_point_indices_and_vertices(True, False, True, True)
+        iv0, iv1, iv2, iv3 = get_indices()
         out_faces.append([iv0, iv3, iv2])
+        return
+
+    if is_good_triangle(ix + 1, iy, ix, iy + 1, ix + 1, iy + 1):
+        append_point_indices_and_vertices(False, True, True, True)
+        iv0, iv1, iv2, iv3 = get_indices()
+        out_faces.append([iv1, iv3, iv2])
         return
 
     return
