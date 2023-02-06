@@ -155,8 +155,8 @@ def main(meta):
 
 # Python Root
 if __name__ == "__main__":
-    meta_data = {'load_name': 'test2.stl',
-                 'save_path': './',
+    meta_data = {'load_name': 'test.stl',
+                 'save_path': './result/',
                  'save_name_func': lambda i: 'pc_' + str(i).zfill(3),
                  'width': 1000,
                  'height': 800,
@@ -164,7 +164,7 @@ if __name__ == "__main__":
                  'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])),
                  'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])),
                  'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])),
-                 'control': Control1(10)}
+                 'control': Control2(10, 5)}
 
     meta_data['projection'].aspect = meta_data['width'] / meta_data['height']
 

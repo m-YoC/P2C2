@@ -18,6 +18,8 @@ import glfw
 import numpy as np
 import math
 
+import os
+
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -229,6 +231,7 @@ def create_window(width, height, title):
         sys.exit(1)
 
     # ウィンドウ不可視状態
+    # if(os.getenv('HEADLESS', 'false') == 'true'):
     # glfw.window_hint(glfw.VISIBLE, False)
 
     try:

@@ -1,0 +1,3 @@
+
+./PartialPointCloudCreator/result/*
+!./PartialPointCloudCreator/result/.keep

@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: python.dockerfile
-    image: reg-python-tools
+    image: python-p2c2
     volumes:
      - "./PartialPointCloudCreator:/P2C2"
     tty: true
