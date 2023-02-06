@@ -81,8 +81,9 @@ class ControlManual(ControlBase):
 
         if glfw.get_key(window, glfw.KEY_S) == glfw.PRESS and self.__lock_key == 0:
             self.__lock_key = 's'
-            self.save_depth_to_xyz(meta, meta['save_path'] + meta['save_name_func'](meta['model'].angle) + '.xyz')
-            if(meta['save_snapshot']) : self.save_snapshot(meta, meta['save_path'] + meta['save_name_func'](meta['model'].angle) + '_ss.png')
+            name_base = meta['save_path'] + meta['save_name_func'](meta['model'].angle)
+            self.save_depth_to_xyz(meta, name_base + '.xyz') if not meta['save_stl_mode'] else self.save_depth_to_stl(meta, name_base + '.stl')
+            if meta['save_snapshot'] : self.save_snapshot(meta, name_base + '_ss.png')
 
         if glfw.get_key(window, glfw.KEY_Z) == glfw.PRESS and self.__lock_key == 0:
             self.__lock_key = 'z'
@@ -114,8 +115,9 @@ class ControlAuto(ControlBase):
 
         glfw.poll_events()
 
-        self.save_depth_to_xyz(meta, meta['save_path'] + meta['save_name_func'](meta['model'].angle) + '.xyz')
-        if(meta['save_snapshot']) : self.save_snapshot(meta, meta['save_path'] + meta['save_name_func'](meta['model'].angle) + '_ss.png')
+        name_base = meta['save_path'] + meta['save_name_func'](meta['model'].angle)
+        self.save_depth_to_xyz(meta, name_base + '.xyz') if not meta['save_stl_mode'] else self.save_depth_to_stl(meta, name_base + '.stl')
+        if meta['save_snapshot'] : self.save_snapshot(meta, name_base + '_ss.png')
         meta['model'].angle = self.set_angle_degree(meta['model'].angle, self.d_angle)
         print(meta['model'].angle)
 
@@ -170,6 +172,7 @@ def create_meta_data(load_name, **kwargs):
                  'save_path': './result/', # 保存ディレクトリ
                  'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # 保存ファイル名. 引数に角度(deg)が入る
                  'save_snapshot': False, # スナップショットを保存するか
+                 'save_stl_mode': True, # stl形式で保存するか
                  'width': 640, # ウィンドウの横幅. この大きさが最終的な点群の密度にも影響する
                  'height': 480, # ウィンドウの縦幅. この大きさが最終的な点群の密度にも影響する
                  'projection': glb.Perspective(60, 0, 0.1, 100), # projection matrix

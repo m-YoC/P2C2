@@ -107,7 +107,7 @@ def get_vertex_and_face(image, width, height, fov, zn, zf, view_mat):
     # points[width, height, xyz]
     points = np.zeros((width, height, 3))
     # is_existence[width, height] True, False
-    is_existence = np.zeros((width, height), dtype=np.bool)
+    is_existence = np.zeros((width, height), dtype=bool)
     # indices[width, height] 0, 1, 2, ...
     indices = -np.ones((width, height), dtype=np.int32)
 
