@@ -166,17 +166,17 @@ def create_meta_data(load_name, **kwargs):
     angle_degree = kwargs.get('angle_degree', 20)
     repeat = kwargs.get('repeat', 18)
 
-    meta_data = {'load_name': load_name,
-                 'save_path': './result/',
-                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3),
-                 'save_snapshot': False,
-                 'width': 640,
-                 'height': 480,
-                 'projection': glb.Perspective(60, 0, 0.1, 100),
-                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])),
-                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])),
-                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])),
-                 'control': ControlAuto(angle_degree, repeat)}
+    meta_data = {'load_name': load_name, # 読み込むstlファイルのパス
+                 'save_path': './result/', # 保存ディレクトリ
+                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # 保存ファイル名. 引数に角度(deg)が入る
+                 'save_snapshot': False, # スナップショットを保存するか
+                 'width': 640, # ウィンドウの横幅. この大きさが最終的な点群の密度にも影響する
+                 'height': 480, # ウィンドウの縦幅. この大きさが最終的な点群の密度にも影響する
+                 'projection': glb.Perspective(60, 0, 0.1, 100), # projection matrix
+                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])), # view matrix
+                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])), # モデルの初期状態の調整用
+                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])), # model matrix. モデルの状態更新に使用される
+                 'control': ControlAuto(angle_degree, repeat)} # 動作を定義するクラス
 
     meta_data['projection'].aspect = meta_data['width'] / meta_data['height']
 
