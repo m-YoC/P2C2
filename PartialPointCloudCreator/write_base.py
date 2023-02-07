@@ -3,6 +3,8 @@
 import numpy as np
 import math
 
+from struct import pack
+
 from logging import getLogger
 logger = getLogger(__name__)
 
@@ -33,6 +35,9 @@ def get_vy(sy, vz, width, height, fov):
     return vz / height * (height - 2 * sy) * math.tan(math.radians(fov) * 0.5)
 
 
+# ----------------------------------------------------------------------
+
+
 def get_xyz(image, width, height, fov, zn, zf, view_mat):
     res = []
     view_inv = np.linalg.inv(view_mat)
@@ -53,6 +58,16 @@ def write_xyz_file(xyz_data, path):
     with open(path, mode='w') as f:
         for i in range(len(xyz_data)):
             f.write(str(xyz_data[i][0]) + ' ' + str(xyz_data[i][1]) + ' ' + str(xyz_data[i][2]) + '\n')
+
+# [size: 4byte uint] + ( [coordinate: 4byte float] * 3 ) * size
+def write_bin_file(xyz_data, path):
+    with open(path, mode='wb') as f:
+        f.write(pack('I', len(xyz_data)))
+        for i in range(len(xyz_data)):
+            f.write(pack('fff', xyz_data[i][0], xyz_data[i][1], xyz_data[i][2]))
+
+
+# ----------------------------------------------------------------------
 
 
 # 速度の為にエラー処理は書かない
@@ -167,7 +182,7 @@ def get_vertex_and_face(image, width, height, fov, zn, zf, view_mat):
     return vertices, faces
 
 
-def write_stl_file(vertex, face, path):
+def write_stl_ascii_file(vertex, face, path):
     with open(path, mode='w') as f:
         f.write('solid ' + 'p2c2data' + '\n')
         for i in range(len(face)):
@@ -185,4 +200,17 @@ def write_stl_file(vertex, face, path):
             f.write('endloop' + '\n')
             f.write('endfacet' + '\n')
         f.write('endsolid ' + 'p2c2data' + '\n')
+
+
+def write_stl_binary_file(vertex, face, path):
+    with open(path, mode='wb') as f:
+        f.write(pack('80sI', b'p2c2data', len(face)))
+        for i in range(len(face)):
+            # 面の頂点の値を取得
+            v0 = np.array(vertex[face[i][0]])
+            v1 = np.array(vertex[face[i][1]])
+            v2 = np.array(vertex[face[i][2]])
+            # 法線
+            normal = normalize(np.cross(v1 - v0, v2 - v0))
+            f.write(pack('ffffffffffff2s', *normal, *v0, *v1, *v2, b''))
 

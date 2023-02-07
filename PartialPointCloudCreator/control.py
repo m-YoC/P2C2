@@ -41,29 +41,55 @@ class ControlBase(metaclass=ABCMeta):
         print('finish save snapshot')
 
     @staticmethod
-    def save_depth_to_xyz(meta, save_name):
-        print('start save depth')
-        image_buffer = gl.glReadPixels(0, 0, meta['width'], meta['height'],
-                                       gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
-        image = np.frombuffer(image_buffer, dtype=np.float32).reshape(meta['height'], meta['width'])
+    def save_depth_to_xyz(meta, save_name, image):
         xyz = wb.get_xyz(image, meta['width'], meta['height'],
                          meta['projection'].fov, meta['projection'].z_near, meta['projection'].z_far,
                          meta['view'].matrix())
         wb.write_xyz_file(xyz, save_name)
-        print('finish save depth')
+    
+    @staticmethod
+    def save_depth_to_bin(meta, save_name, image):
+        xyz = wb.get_xyz(image, meta['width'], meta['height'],
+                         meta['projection'].fov, meta['projection'].z_near, meta['projection'].z_far,
+                         meta['view'].matrix())
+        wb.write_bin_file(xyz, save_name)
 
     @staticmethod
-    def save_depth_to_stl(meta, save_name):
+    def save_depth_to_stl_ascii(meta, save_name, image):
+        print('get vertices and faces...')
+        v, f = wb.get_vertex_and_face(image, meta['width'], meta['height'],
+                                      meta['projection'].fov, meta['projection'].z_near, meta['projection'].z_far,
+                                      meta['view'].matrix())
+        print('writing...')
+        wb.write_stl_ascii_file(v, f, save_name)
+
+    @staticmethod
+    def save_depth_to_stl_binary(meta, save_name, image):
+        print('get vertices and faces...')
+        v, f = wb.get_vertex_and_face(image, meta['width'], meta['height'],
+                                      meta['projection'].fov, meta['projection'].z_near, meta['projection'].z_far,
+                                      meta['view'].matrix())
+        print('writing...')
+        wb.write_stl_binary_file(v, f, save_name)
+
+    @staticmethod
+    def save_depth(meta, save_name_base):
         print('start save depth')
         image_buffer = gl.glReadPixels(0, 0, meta['width'], meta['height'],
                                        gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
         image = np.frombuffer(image_buffer, dtype=np.float32).reshape(meta['height'], meta['width'])
-        v, f = wb.get_vertex_and_face(image, meta['width'], meta['height'],
-                                      meta['projection'].fov, meta['projection'].z_near, meta['projection'].z_far,
-                                      meta['view'].matrix())
-        print('get vertices and faces...')
-        wb.write_stl_file(v, f, save_name)
-        print('writing...')
+
+        match meta.get('save_format', ''):
+            case 'xyz':
+                ControlBase.save_depth_to_xyz(meta, save_name_base + '.xyz', image)
+            case 'bin':
+                ControlBase.save_depth_to_bin(meta, save_name_base + '.bin', image)
+            case 'stl ascii':
+                ControlBase.save_depth_to_stl_ascii(meta, save_name_base + '.stl', image)
+            case 'stl binary':
+                ControlBase.save_depth_to_stl_binary(meta, save_name_base + '.stl', image)
+            case _:
+                print('* Selected save format is an invalid type. Skip...')
         print('finish save depth')
 
 
@@ -82,7 +108,7 @@ class ControlManual(ControlBase):
         if glfw.get_key(window, glfw.KEY_S) == glfw.PRESS and self.__lock_key == 0:
             self.__lock_key = 's'
             name_base = meta['save_path'] + meta['save_name_func'](meta['model'].angle)
-            self.save_depth_to_xyz(meta, name_base + '.xyz') if not meta['save_stl_mode'] else self.save_depth_to_stl(meta, name_base + '.stl')
+            self.save_depth(meta, name_base)
             if meta['save_snapshot'] : self.save_snapshot(meta, name_base + '_ss.png')
 
         if glfw.get_key(window, glfw.KEY_Z) == glfw.PRESS and self.__lock_key == 0:
@@ -116,7 +142,7 @@ class ControlAuto(ControlBase):
         glfw.poll_events()
 
         name_base = meta['save_path'] + meta['save_name_func'](meta['model'].angle)
-        self.save_depth_to_xyz(meta, name_base + '.xyz') if not meta['save_stl_mode'] else self.save_depth_to_stl(meta, name_base + '.stl')
+        self.save_depth(meta, name_base)
         if meta['save_snapshot'] : self.save_snapshot(meta, name_base + '_ss.png')
         meta['model'].angle = self.set_angle_degree(meta['model'].angle, self.d_angle)
         print(meta['model'].angle)
@@ -168,18 +194,18 @@ def create_meta_data(load_name, **kwargs):
     angle_degree = kwargs.get('angle_degree', 20)
     repeat = kwargs.get('repeat', 18)
 
-    meta_data = {'load_name': load_name, # 読み込むstlファイルのパス
-                 'save_path': './result/', # 保存ディレクトリ
-                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # 保存ファイル名. 引数に角度(deg)が入る
-                 'save_snapshot': False, # スナップショットを保存するか
-                 'save_stl_mode': False, # stl形式で保存するか
-                 'width': 640, # ウィンドウの横幅. この大きさが最終的な点群の密度にも影響する
-                 'height': 480, # ウィンドウの縦幅. この大きさが最終的な点群の密度にも影響する
-                 'projection': glb.Perspective(60, 0, 0.1, 100), # projection matrix
-                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])), # view matrix
-                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])), # モデルの初期状態の調整用
-                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])), # model matrix. モデルの状態更新に使用される
-                 'control': ControlAuto(angle_degree, repeat)} # 動作を定義するクラス
+    meta_data = {'load_name': load_name, # Path of stl file to read
+                 'save_path': './result/', # Save directory
+                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # Base function of generate save file name. Arg is angle(degree).
+                 'save_snapshot': False, # Save snapshot or not
+                 'save_format': 'xyz', # Save format ['xyz', 'bin', 'stl ascii', 'stl binary']
+                 'width': 640, # Window width. This size also affects the density of point clouds
+                 'height': 480, # Window height. This size also affects the density of point clouds
+                 'projection': glb.Perspective(60, 0, 0.1, 100), # Projection matrix parameter
+                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])), # View matrix parameter
+                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])), # Attitude parameters for adjusting the initial state of the model
+                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])), # Model matrix parameter for updating
+                 'control': ControlAuto(angle_degree, repeat)} # Used control class
 
     meta_data['projection'].aspect = meta_data['width'] / meta_data['height']
 
