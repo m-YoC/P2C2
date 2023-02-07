@@ -196,16 +196,27 @@ def create_meta_data(load_name, **kwargs):
 
     meta_data = {'load_name': load_name, # Path of stl file to read
                  'save_path': './result/', # Save directory
-                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3), # Base function of generate save file name. Arg is angle(degree).
-                 'save_snapshot': False, # Save snapshot or not
-                 'save_format': 'xyz', # Save format ['xyz', 'bin', 'stl ascii', 'stl binary']
-                 'width': 640, # Window width. This size also affects the density of point clouds
-                 'height': 480, # Window height. This size also affects the density of point clouds
-                 'projection': glb.Perspective(60, 0, 0.1, 100), # Projection matrix parameter
-                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])), # View matrix parameter
-                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])), # Attitude parameters for adjusting the initial state of the model
-                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])), # Model matrix parameter for updating
-                 'control': ControlAuto(angle_degree, repeat)} # Used control class
+                 # Base function of generate save file name. Arg is angle(degree).
+                 'save_name_func': lambda i: 'pc_' + str(i).zfill(3), 
+                 # Save snapshot or not
+                 'save_snapshot': False, 
+                 # Save format ['xyz', 'bin', 'stl ascii', 'stl binary']
+                 'save_format': 'xyz', 
+                 # Window width and height. This size also affects the density of point clouds
+                 'width': 640, 
+                 'height': 480,
+                 # Projection matrix parameter (fov, aspect, z_near, z_far)
+                 'projection': glb.Perspective(60, 0, 0.1, 100), 
+                 # View matrix parameter (eye, target, up)
+                 'view': glb.LookAt(np.array([0, 1, 3]), np.array([0, 0, 0]), np.array([0, 1, 0])), 
+                 # Attitude parameters for adjusting the initial state of the model
+                 # (scale, angle(degree), axis, translation)
+                 'ini_model': glb.Transform(1, -10, np.array([1, 0, 0]), np.array([0, 0, 0])), 
+                 # Model matrix parameter for updating
+                 # (scale, angle(degree), axis, translation)
+                 'model': glb.Transform(1, 0, np.array([0, 1, 0]), np.array([0, 0, 0])), 
+                 # Used control class
+                 'control': ControlAuto(angle_degree, repeat)} 
 
     meta_data['projection'].aspect = meta_data['width'] / meta_data['height']
 
