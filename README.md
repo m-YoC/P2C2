@@ -9,6 +9,10 @@ Load `.stl` model data and create `(.xyz|.bin|.stl(ascii)|.stl(binary))` partial
 - Please check the `create_meta_data` function in `control.py` for detailed parameters.
     - 細かいパラメータの内容は`control.py`の`create_meta_data`関数を確認してください
 
+## Essential Packages
+
+Check [python.dockerfile](./python.dockerfile), please.
+
 ## RUN
 
 In Docker container...
